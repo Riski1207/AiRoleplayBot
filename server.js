@@ -8,9 +8,9 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static(__dirname));
 
-// --- KONFIGURASI (GANTI DENGAN MILIK ANDA) ---
-const BOT_TOKEN = "7864353457:AAFmI_7Lz02VAnA6vI57vF1X8X8X8X8X8X8"; // Masukkan Token Bot dari BotFather
-const GROQ_API_KEY = process.env.GROQ_API_KEY; //
+// --- KONFIGURASI AMAN (MENGGUNAKAN ENV) ---
+const BOT_TOKEN = process.env.BOT_TOKEN; 
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 // 1. ENDPOINT CHAT AI
 app.post('/api/chat', async (req, res) => {
@@ -32,7 +32,7 @@ app.post('/api/chat', async (req, res) => {
     } catch (error) { res.status(500).json({ reply: "Sihirku terganggu." }); }
 });
 
-// 2. ENDPOINT TELEGRAM STARS
+// 2. ENDPOINT TELEGRAM STARS (CREATE INVOICE)
 app.post('/api/create-stars-invoice', async (req, res) => {
     try {
         const { userId, starsAmount, energyAmount } = req.body;
@@ -43,8 +43,8 @@ app.post('/api/create-stars-invoice', async (req, res) => {
                 title: `Top Up ${energyAmount} Energi`,
                 description: `Memperkuat sihir Luna AI.`,
                 payload: `user_${userId}_topup_${energyAmount}`,
-                provider_token: "", // Wajib kosong untuk Stars
-                currency: "XTR",    // Kode Stars
+                provider_token: "", 
+                currency: "XTR", 
                 prices: [{ label: "Energi", amount: starsAmount }] 
             })
         });
@@ -53,7 +53,25 @@ app.post('/api/create-stars-invoice', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Gagal membuat invoice." }); }
 });
 
-// 3. ROUTE PRIVACY & HOME
+// 3. WEBHOOK UNTUK KONFIRMASI PEMBAYARAN (WAJIB ADA)
+app.post('/api/telegram-webhook', async (req, res) => {
+    const update = req.body;
+    
+    // Menjawab konfirmasi sebelum saldo user dipotong
+    if (update.pre_checkout_query) {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerPreCheckoutQuery`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                pre_checkout_query_id: update.pre_checkout_query.id,
+                ok: true
+            })
+        });
+    }
+    res.sendStatus(200);
+});
+
+// 4. ROUTE PRIVACY & HOME
 app.get('/privacy', (req, res) => { res.sendFile(path.join(__dirname, 'privacy.html')); });
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 
