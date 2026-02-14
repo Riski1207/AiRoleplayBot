@@ -10,7 +10,7 @@ app.use(express.static(__dirname));
 
 // --- KONFIGURASI (GANTI DENGAN MILIK ANDA) ---
 const BOT_TOKEN = "7864353457:AAFmI_7Lz02VAnA6vI57vF1X8X8X8X8X8X8"; // Masukkan Token Bot dari BotFather
-const GROQ_API_KEY = "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"; //
+const GROQ_API_KEY = process.env.GROQ_API_KEY; //
 
 // 1. ENDPOINT CHAT AI
 app.post('/api/chat', async (req, res) => {
